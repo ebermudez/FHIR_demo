@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Note to Record — von der Konsultationsnotiz zu FHIR</title>
+  <meta name="description" content="Demo: wie eine KI-Scribe-Notiz als FHIR R4 Ressourcen in einem Praxisverwaltungssystem landet." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <span class="tag">Demo · nur Testdaten</span>
+      <h1>Note to Record</h1>
+      <p>
+        So wird aus einer Konsultationsnotiz ein strukturierter FHIR-R4-Datensatz im
+        Praxisverwaltungssystem: eine KI-Scribe schreibt die Notiz, die Felder werden auf
+        Patient, Encounter und DocumentReference abgebildet, und die Notiz wird unverändert
+        aus dem Server zurückgelesen, um den Roundtrip zu beweisen.
+      </p>
+    </header>
+
+    <section class="card" id="note">
+      <h2>1. Konsultationsnotiz</h2>
+      <p class="section-sub">Hausarztbesuch wegen Rückenschmerzen · frei erfundene Patientin</p>
+      <pre id="note-text"></pre>
+    </section>
+
+    <section class="card" id="mapping">
+      <h2>2. Zuordnung zu FHIR</h2>
+      <p class="section-sub">Welcher Teil der Notiz landet in welchem FHIR-Feld</p>
+      <div class="table-scroll">
+      <table class="mapping">
+        <thead>
+          <tr>
+            <th>Teil der Notiz</th>
+            <th>FHIR-Feld</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Patientin: Erika Mustermann</td>
+            <td class="field">Patient.name</td>
+          </tr>
+          <tr>
+            <td>Geburtsdatum: 14.03.1975</td>
+            <td class="field">Patient.birthDate</td>
+          </tr>
+          <tr>
+            <td>Geschlecht: weiblich</td>
+            <td class="field">Patient.gender</td>
+          </tr>
+          <tr>
+            <td>Termin: 07.10.2026</td>
+            <td class="field">Encounter.period.start</td>
+          </tr>
+          <tr>
+            <td>Art des Dokuments (Konsultationsnotiz)</td>
+            <td class="field">DocumentReference.type = LOINC 11488-4</td>
+          </tr>
+          <tr>
+            <td>Bezug zu Patientin &amp; Termin</td>
+            <td class="field">DocumentReference.subject / .context.encounter</td>
+          </tr>
+          <tr>
+            <td>Gesamter Notiztext</td>
+            <td class="field">DocumentReference.content.attachment.data (Base64)</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <section class="card" id="actions">
+      <h2>3. An das Record-System senden</h2>
+      <p class="section-sub">
+        Legt Patient, Encounter und DocumentReference auf dem öffentlichen HAPI-FHIR-Testserver an
+        und liest die Notiz zurück.
+      </p>
+      <div class="actions-row">
+        <button id="send-btn">Send to record</button>
+        <button id="break-btn">Break it</button>
+      </div>
+      <p class="status-line" id="status-line"></p>
+      <p class="explain-box hidden" id="explain-box"></p>
+    </section>
+
+    <section class="card hidden" id="roundtrip">
+      <h2>4. Roundtrip-Vergleich</h2>
+      <p class="section-sub">Original-Notiz vs. aus dem Server dekodierte Notiz</p>
+      <div class="roundtrip-grid">
+        <div>
+          <h3>Original</h3>
+          <pre id="roundtrip-original"></pre>
+        </div>
+        <div>
+          <h3>Vom Server zurückgelesen</h3>
+          <pre id="roundtrip-decoded"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="log-section">
+      <div class="log-header-row">
+        <h2 style="margin:0;">5. API-Log</h2>
+        <button id="clear-log-btn">Clear</button>
+      </div>
+      <div id="log-entries"></div>
+    </section>
+
+    <footer>
+      Testdaten, öffentlicher Server
+      (<a href="https://hapi.fhir.org/baseR4" target="_blank" rel="noopener">hapi.fhir.org/baseR4</a>),
+      für jeden sichtbar — keine echten Patientendaten.
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
