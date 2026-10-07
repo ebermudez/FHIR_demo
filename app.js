@@ -38,8 +38,10 @@ const translations = {
     rowFullText: "Full note text",
     actionsHeading: "3. Send to record system",
     actionsSub:
-      "Creates Patient, Encounter, Condition, and DocumentReference on the public HAPI " +
-      "FHIR test server, and reads the note back.",
+      '"Send to record" creates Patient, Encounter, Condition, and DocumentReference on ' +
+      'the public HAPI FHIR test server and reads the note back. "Break it" sends a ' +
+      "deliberately broken version of that same document, so you can see exactly what a " +
+      "rejected integration call looks like and why.",
     sendBtn: "Send to record",
     breakBtn: "Break it",
     roundtripHeading: "4. Round trip comparison",
@@ -67,11 +69,15 @@ const translations = {
     breakUnexpected: "Unexpected: the server marked the invalid resource as valid.",
     breakRejected: "The server rejected the resource as invalid, as expected.",
     explainText:
-      'The server marked the document as invalid because the required field "status" is ' +
-      'missing (it must be, e.g., "current" to say the note is current and valid). An ' +
-      "integration team would fix this by always including this field in the sending " +
-      "application, and by validating the note with a $validate check like this one " +
-      "before sending it to the target system.",
+      'What we just did: we sent a version of the document with a required field called ' +
+      '"status" deliberately left out. That field tells a record system whether a ' +
+      "document is current, has been replaced, or was entered by mistake — real systems " +
+      "need it to know whether they can trust what they're looking at. The server caught " +
+      "this immediately and rejected the document, which is exactly what should happen: a " +
+      "system that silently accepts broken data is far more dangerous than one that " +
+      "clearly rejects it. To fix this for real, the application sending the note would " +
+      "always include that field, and an integration would run this same kind of check " +
+      "(called $validate) before anything reaches the target system.",
     serverDetail: " Server detail: %s",
     timeoutMsg: "Timeout: server did not respond after %ss.",
     networkErrorMsg: "Network error: %s",
@@ -96,8 +102,10 @@ const translations = {
     rowFullText: "Gesamter Notiztext",
     actionsHeading: "3. An das Record-System senden",
     actionsSub:
-      "Legt Patient, Encounter, Condition und DocumentReference auf dem öffentlichen " +
-      "HAPI-FHIR-Testserver an und liest die Notiz zurück.",
+      '"Send to record" legt Patient, Encounter, Condition und DocumentReference auf dem ' +
+      'öffentlichen HAPI-FHIR-Testserver an und liest die Notiz zurück. "Break it" sendet ' +
+      "absichtlich eine fehlerhafte Version desselben Dokuments, damit sichtbar wird, wie " +
+      "eine abgelehnte Integrationsanfrage aussieht und warum.",
     sendBtn: "Send to record",
     breakBtn: "Break it",
     roundtripHeading: "4. Roundtrip-Vergleich",
@@ -125,11 +133,15 @@ const translations = {
     breakUnexpected: "Unerwartet: Server hat die ungültige Ressource als gültig markiert.",
     breakRejected: "Server hat die Ressource als ungültig abgelehnt, wie erwartet.",
     explainText:
-      'Der Server hat das Dokument als ungültig markiert, weil das Pflichtfeld "status" ' +
-      'fehlt (es muss z. B. "current" sein, um zu sagen, dass die Notiz aktuell und ' +
-      "gültig ist). Ein Integrationsteam würde das beheben, indem die sendende Anwendung " +
-      "dieses Feld immer mitschickt und die Notiz erst nach einer $validate-Prüfung wie " +
-      "dieser an das Zielsystem sendet.",
+      'Was gerade passiert ist: Wir haben eine Version des Dokuments gesendet, der das ' +
+      'Pflichtfeld "status" absichtlich fehlt. Dieses Feld sagt einem Record-System, ob ' +
+      "ein Dokument aktuell ist, ersetzt wurde oder versehentlich angelegt wurde – echte " +
+      "Systeme brauchen das, um zu wissen, ob sie dem Dokument trauen können. Der Server " +
+      "hat das sofort erkannt und das Dokument abgelehnt – genau das sollte passieren: Ein " +
+      "System, das fehlerhafte Daten stillschweigend akzeptiert, ist weit gefährlicher als " +
+      "eines, das sie klar ablehnt. Um das in der Praxis zu beheben, würde die sendende " +
+      "Anwendung dieses Feld immer mitschicken, und eine Integration würde genau diese Art " +
+      "von Prüfung (genannt $validate) durchführen, bevor etwas das Zielsystem erreicht.",
     serverDetail: " Serverdetail: %s",
     timeoutMsg: "Zeitüberschreitung: Server hat nach %ss nicht geantwortet.",
     networkErrorMsg: "Netzwerkfehler: %s",

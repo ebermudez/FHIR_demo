@@ -84,8 +84,10 @@
     <section class="card" id="actions">
       <h2 data-i18n="actionsHeading">3. Send to record system</h2>
       <p class="section-sub" data-i18n="actionsSub">
-        Creates Patient, Encounter, Condition, and DocumentReference on the public HAPI FHIR
-        test server, and reads the note back.
+        "Send to record" creates Patient, Encounter, Condition, and DocumentReference on the
+        public HAPI FHIR test server and reads the note back. "Break it" sends a deliberately
+        broken version of that same document, so you can see exactly what a rejected
+        integration call looks like and why.
       </p>
       <div class="actions-row">
         <button id="send-btn" data-i18n="sendBtn">Send to record</button>
