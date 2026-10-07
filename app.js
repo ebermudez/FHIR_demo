@@ -1,5 +1,6 @@
 const FHIR_BASE = "https://hapi.fhir.org/baseR4";
 const REQUEST_TIMEOUT_MS = 15000;
+const ICD10GM_SYSTEM = "http://fhir.de/CodeSystem/bfarm/icd-10-gm";
 
 const NOTE_TEXT = `Patientin: Erika Mustermann
 Geburtsdatum: 14.03.1975
@@ -10,11 +11,140 @@ Anamnese: Patientin berichtet über seit 3 Tagen bestehende Schmerzen im unteren
 
 Untersuchung: Klopfschmerz über der LWS, Bewegungseinschränkung bei Flexion, Lasègue-Zeichen beidseits negativ, Fußpulse tastbar.
 
-Beurteilung: Akute unspezifische lumbale Rückenschmerzen (ICD-10 M54.5).
+Beurteilung: Akute unspezifische lumbale Rückenschmerzen (ICD-10-GM M54.50).
 
 Therapie: Ibuprofen 400 mg bei Bedarf, lokale Wärmeanwendung, Bewegung statt Schonung empfohlen.
 
 Wiedervorstellung bei Beschwerdepersistenz über 2 Wochen oder neurologischen Ausfällen.`;
+
+const translations = {
+  en: {
+    pageTitle: "Note to Record — from consultation note to FHIR",
+    metaDescription: "Demo: how an AI scribe note becomes FHIR R4 resources in a medical record system.",
+    tag: "Demo · sample data only",
+    intro:
+      "This is how a consultation note becomes a structured FHIR R4 record in a medical " +
+      "record system: an AI scribe writes the note, the fields are mapped onto Patient, " +
+      "Encounter, Condition, and DocumentReference, and the note is read back unchanged " +
+      "from the server to prove the round trip.",
+    noteHeading: "1. Consultation note",
+    noteSub: "GP visit for back pain · fictional patient",
+    mappingHeading: "2. Mapping to FHIR",
+    mappingSub: "Which part of the note becomes which FHIR field",
+    thNote: "Part of the note",
+    thField: "FHIR field",
+    rowDocType: "Type of document (consult note)",
+    rowLink: "Link to patient & visit",
+    rowFullText: "Full note text",
+    actionsHeading: "3. Send to record system",
+    actionsSub:
+      "Creates Patient, Encounter, Condition, and DocumentReference on the public HAPI " +
+      "FHIR test server, and reads the note back.",
+    sendBtn: "Send to record",
+    breakBtn: "Break it",
+    roundtripHeading: "4. Round trip comparison",
+    roundtripSub: "Original note vs. the note decoded from the server",
+    roundtripOriginalLabel: "Original",
+    roundtripDecodedLabel: "Read back from server",
+    logHeading: "5. API log",
+    clearBtn: "Clear",
+    footer1: "Test data, public server (",
+    footer2: "), visible to everyone — no real patient data.",
+    logEmpty: 'No calls yet. Click "Send to record".',
+    sendingPatient: "Sending Patient…",
+    sendingEncounter: "Sending Encounter…",
+    sendingCondition: "Sending Condition…",
+    sendingDocument: "Sending DocumentReference…",
+    readingDocument: "Reading DocumentReference back…",
+    errorPatient: "Error creating the Patient. See log.",
+    errorEncounter: "Error creating the Encounter. See log.",
+    errorCondition: "Error creating the Condition. See log.",
+    errorDocument: "Error creating the DocumentReference. See log.",
+    errorRead: "Error reading the document back. See log.",
+    doneStatus: "Done: Patient/%s, Encounter/%s, Condition/%s, DocumentReference/%s created and successfully read back.",
+    breakSending: "Sending an invalid DocumentReference (without status) for validation…",
+    breakNetworkError: "Network error during the test. See log.",
+    breakUnexpected: "Unexpected: the server marked the invalid resource as valid.",
+    breakRejected: "The server rejected the resource as invalid, as expected.",
+    explainText:
+      'The server marked the document as invalid because the required field "status" is ' +
+      'missing (it must be, e.g., "current" to say the note is current and valid). An ' +
+      "integration team would fix this by always including this field in the sending " +
+      "application, and by validating the note with a $validate check like this one " +
+      "before sending it to the target system.",
+    serverDetail: " Server detail: %s",
+    timeoutMsg: "Timeout: server did not respond after %ss.",
+    networkErrorMsg: "Network error: %s",
+  },
+  de: {
+    pageTitle: "Note to Record — von der Konsultationsnotiz zu FHIR",
+    metaDescription: "Demo: wie eine KI-Scribe-Notiz als FHIR R4 Ressourcen in einem Praxisverwaltungssystem landet.",
+    tag: "Demo · nur Testdaten",
+    intro:
+      "So wird aus einer Konsultationsnotiz ein strukturierter FHIR-R4-Datensatz im " +
+      "Praxisverwaltungssystem: eine KI-Scribe schreibt die Notiz, die Felder werden auf " +
+      "Patient, Encounter, Condition und DocumentReference abgebildet, und die Notiz wird " +
+      "unverändert aus dem Server zurückgelesen, um den Roundtrip zu beweisen.",
+    noteHeading: "1. Konsultationsnotiz",
+    noteSub: "Hausarztbesuch wegen Rückenschmerzen · frei erfundene Patientin",
+    mappingHeading: "2. Zuordnung zu FHIR",
+    mappingSub: "Welcher Teil der Notiz landet in welchem FHIR-Feld",
+    thNote: "Teil der Notiz",
+    thField: "FHIR-Feld",
+    rowDocType: "Art des Dokuments (Konsultationsnotiz)",
+    rowLink: "Bezug zu Patientin & Termin",
+    rowFullText: "Gesamter Notiztext",
+    actionsHeading: "3. An das Record-System senden",
+    actionsSub:
+      "Legt Patient, Encounter, Condition und DocumentReference auf dem öffentlichen " +
+      "HAPI-FHIR-Testserver an und liest die Notiz zurück.",
+    sendBtn: "Send to record",
+    breakBtn: "Break it",
+    roundtripHeading: "4. Roundtrip-Vergleich",
+    roundtripSub: "Original-Notiz vs. aus dem Server dekodierte Notiz",
+    roundtripOriginalLabel: "Original",
+    roundtripDecodedLabel: "Vom Server zurückgelesen",
+    logHeading: "5. API-Log",
+    clearBtn: "Clear",
+    footer1: "Testdaten, öffentlicher Server (",
+    footer2: "), für jeden sichtbar — keine echten Patientendaten.",
+    logEmpty: 'Noch keine Aufrufe. Klicke "Send to record".',
+    sendingPatient: "Sende Patient…",
+    sendingEncounter: "Sende Encounter…",
+    sendingCondition: "Sende Condition…",
+    sendingDocument: "Sende DocumentReference…",
+    readingDocument: "Lese DocumentReference zurück…",
+    errorPatient: "Fehler beim Anlegen des Patienten. Siehe Log.",
+    errorEncounter: "Fehler beim Anlegen des Encounters. Siehe Log.",
+    errorCondition: "Fehler beim Anlegen der Condition. Siehe Log.",
+    errorDocument: "Fehler beim Anlegen der DocumentReference. Siehe Log.",
+    errorRead: "Fehler beim Zurücklesen. Siehe Log.",
+    doneStatus: "Fertig: Patient/%s, Encounter/%s, Condition/%s, DocumentReference/%s angelegt und erfolgreich zurückgelesen.",
+    breakSending: "Sende ungültige DocumentReference (ohne status) zur Prüfung…",
+    breakNetworkError: "Netzwerkfehler beim Testen. Siehe Log.",
+    breakUnexpected: "Unerwartet: Server hat die ungültige Ressource als gültig markiert.",
+    breakRejected: "Server hat die Ressource als ungültig abgelehnt, wie erwartet.",
+    explainText:
+      'Der Server hat das Dokument als ungültig markiert, weil das Pflichtfeld "status" ' +
+      'fehlt (es muss z. B. "current" sein, um zu sagen, dass die Notiz aktuell und ' +
+      "gültig ist). Ein Integrationsteam würde das beheben, indem die sendende Anwendung " +
+      "dieses Feld immer mitschickt und die Notiz erst nach einer $validate-Prüfung wie " +
+      "dieser an das Zielsystem sendet.",
+    serverDetail: " Serverdetail: %s",
+    timeoutMsg: "Zeitüberschreitung: Server hat nach %ss nicht geantwortet.",
+    networkErrorMsg: "Netzwerkfehler: %s",
+  },
+};
+
+let currentLang = "en";
+
+function t(key, ...args) {
+  let str = translations[currentLang][key] ?? translations.en[key];
+  args.forEach((arg) => {
+    str = str.replace("%s", arg);
+  });
+  return str;
+}
 
 const noteEl = document.getElementById("note-text");
 const sendBtn = document.getElementById("send-btn");
@@ -26,8 +156,24 @@ const roundtripSection = document.getElementById("roundtrip");
 const roundtripOriginal = document.getElementById("roundtrip-original");
 const roundtripDecoded = document.getElementById("roundtrip-decoded");
 const explainBox = document.getElementById("explain-box");
+const langButtons = document.querySelectorAll(".lang-btn");
+const metaDescriptionEl = document.querySelector('meta[name="description"]');
 
 noteEl.textContent = NOTE_TEXT;
+
+function setLanguage(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.documentElement.dataset.lang = lang;
+  document.title = t("pageTitle");
+  if (metaDescriptionEl) metaDescriptionEl.setAttribute("content", t("metaDescription"));
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  langButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.lang === lang));
+}
+
+langButtons.forEach((btn) => btn.addEventListener("click", () => setLanguage(btn.dataset.lang)));
 
 function utf8ToBase64(str) {
   const bytes = new TextEncoder().encode(str);
@@ -49,7 +195,7 @@ function setStatus(text, kind) {
 }
 
 function shortBody(text, max = 220) {
-  if (!text) return "(leer)";
+  if (!text) return "(empty)";
   const trimmed = text.trim();
   return trimmed.length > max ? trimmed.slice(0, max) + "…" : trimmed;
 }
@@ -116,8 +262,8 @@ async function fhirFetch(method, path, body) {
     clearTimeout(timeoutId);
     const isAbort = err.name === "AbortError";
     const message = isAbort
-      ? `Zeitüberschreitung: Server hat nach ${REQUEST_TIMEOUT_MS / 1000}s nicht geantwortet.`
-      : `Netzwerkfehler: ${err.message}`;
+      ? t("timeoutMsg", REQUEST_TIMEOUT_MS / 1000)
+      : t("networkErrorMsg", err.message);
     logEntry({ method, url, status: null, body: message, isError: true });
     return { ok: false, status: null, json: null, text: message, networkError: true };
   }
@@ -157,6 +303,41 @@ function buildEncounter(patientId) {
     ],
     subject: { reference: `Patient/${patientId}` },
     period: { start: `${today}T09:00:00+02:00`, end: `${today}T09:20:00+02:00` },
+  };
+}
+
+function buildCondition(patientId, encounterId) {
+  return {
+    resourceType: "Condition",
+    clinicalStatus: {
+      coding: [
+        {
+          system: "http://terminology.hl7.org/CodeSystem/condition-clinical",
+          code: "active",
+        },
+      ],
+    },
+    verificationStatus: {
+      coding: [
+        {
+          system: "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+          code: "confirmed",
+        },
+      ],
+    },
+    code: {
+      coding: [
+        {
+          system: ICD10GM_SYSTEM,
+          version: "2026",
+          code: "M54.50",
+          display: "Kreuzschmerz, nicht näher bezeichnet",
+        },
+      ],
+      text: "Akute unspezifische lumbale Rückenschmerzen",
+    },
+    subject: { reference: `Patient/${patientId}` },
+    encounter: { reference: `Encounter/${encounterId}` },
   };
 }
 
@@ -200,14 +381,7 @@ function validationErrorIssues(result) {
 
 function plainErrorExplanation(errorIssues) {
   const diagnostics = errorIssues.map((i) => i.diagnostics).filter(Boolean).join(" ");
-  return (
-    "Der Server hat das Dokument als ungültig markiert, weil das Pflichtfeld \"status\" fehlt " +
-    "(es muss z. B. \"current\" sein, um zu sagen, dass die Notiz aktuell und gültig ist). " +
-    "Ein Integrationsteam würde das beheben, indem die sendende Anwendung dieses Feld " +
-    "immer mitschickt und die Notiz erst nach einer $validate-Prüfung wie dieser an das " +
-    "Zielsystem sendet." +
-    (diagnostics ? ` Serverdetail: ${diagnostics}` : "")
-  );
+  return t("explainText") + (diagnostics ? t("serverDetail", diagnostics) : "");
 }
 
 async function handleSend() {
@@ -215,46 +389,56 @@ async function handleSend() {
   breakBtn.disabled = true;
   roundtripSection.classList.add("hidden");
   explainBox.classList.add("hidden");
-  setStatus("Sende Patient…", "pending");
+  setStatus(t("sendingPatient"), "pending");
 
   const runId = generateRunId();
   const patientRes = await fhirFetch("POST", "/Patient", buildPatient(runId));
   if (!patientRes.ok) {
-    setStatus("Fehler beim Anlegen des Patienten. Siehe Log.", "fail");
+    setStatus(t("errorPatient"), "fail");
     sendBtn.disabled = false;
     breakBtn.disabled = false;
     return;
   }
   const patientId = patientRes.json.id;
 
-  setStatus("Sende Encounter…", "pending");
+  setStatus(t("sendingEncounter"), "pending");
   const encounterRes = await fhirFetch("POST", "/Encounter", buildEncounter(patientId));
   if (!encounterRes.ok) {
-    setStatus("Fehler beim Anlegen des Encounters. Siehe Log.", "fail");
+    setStatus(t("errorEncounter"), "fail");
     sendBtn.disabled = false;
     breakBtn.disabled = false;
     return;
   }
   const encounterId = encounterRes.json.id;
 
-  setStatus("Sende DocumentReference…", "pending");
+  setStatus(t("sendingCondition"), "pending");
+  const conditionRes = await fhirFetch("POST", "/Condition", buildCondition(patientId, encounterId));
+  if (!conditionRes.ok) {
+    setStatus(t("errorCondition"), "fail");
+    sendBtn.disabled = false;
+    breakBtn.disabled = false;
+    return;
+  }
+  const conditionId = conditionRes.json.id;
+
+  setStatus(t("sendingDocument"), "pending");
   const docRes = await fhirFetch(
     "POST",
     "/DocumentReference",
     buildDocumentReference(patientId, encounterId, NOTE_TEXT)
   );
   if (!docRes.ok) {
-    setStatus("Fehler beim Anlegen der DocumentReference. Siehe Log.", "fail");
+    setStatus(t("errorDocument"), "fail");
     sendBtn.disabled = false;
     breakBtn.disabled = false;
     return;
   }
   const docId = docRes.json.id;
 
-  setStatus("Lese DocumentReference zurück…", "pending");
+  setStatus(t("readingDocument"), "pending");
   const readRes = await fhirFetch("GET", `/DocumentReference/${docId}`);
   if (!readRes.ok) {
-    setStatus("Fehler beim Zurücklesen. Siehe Log.", "fail");
+    setStatus(t("errorRead"), "fail");
     sendBtn.disabled = false;
     breakBtn.disabled = false;
     return;
@@ -265,10 +449,7 @@ async function handleSend() {
   roundtripDecoded.textContent = decodedText;
   roundtripSection.classList.remove("hidden");
 
-  setStatus(
-    `Fertig: Patient/${patientId}, Encounter/${encounterId}, DocumentReference/${docId} angelegt und erfolgreich zurückgelesen.`,
-    "ok"
-  );
+  setStatus(t("doneStatus", patientId, encounterId, conditionId, docId), "ok");
   sendBtn.disabled = false;
   breakBtn.disabled = false;
 }
@@ -277,13 +458,13 @@ async function handleBreak() {
   sendBtn.disabled = true;
   breakBtn.disabled = true;
   explainBox.classList.add("hidden");
-  setStatus("Sende ungültige DocumentReference (ohne status) zur Prüfung…", "pending");
+  setStatus(t("breakSending"), "pending");
 
   const badDoc = buildDocumentReference("example", null, NOTE_TEXT, { omitStatus: true });
   const result = await fhirFetch("POST", "/DocumentReference/$validate", badDoc);
 
   if (result.networkError) {
-    setStatus("Netzwerkfehler beim Testen. Siehe Log.", "fail");
+    setStatus(t("breakNetworkError"), "fail");
     sendBtn.disabled = false;
     breakBtn.disabled = false;
     return;
@@ -291,9 +472,9 @@ async function handleBreak() {
 
   const errorIssues = validationErrorIssues(result);
   if (errorIssues.length === 0) {
-    setStatus("Unerwartet: Server hat die ungültige Ressource als gültig markiert.", "fail");
+    setStatus(t("breakUnexpected"), "fail");
   } else {
-    setStatus("Server hat die Ressource als ungültig abgelehnt, wie erwartet.", "fail");
+    setStatus(t("breakRejected"), "fail");
     explainBox.textContent = plainErrorExplanation(errorIssues);
     explainBox.classList.remove("hidden");
   }
@@ -307,3 +488,5 @@ breakBtn.addEventListener("click", handleBreak);
 clearLogBtn.addEventListener("click", () => {
   logEl.innerHTML = "";
 });
+
+setLanguage("en");

@@ -1,40 +1,46 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Note to Record — von der Konsultationsnotiz zu FHIR</title>
-  <meta name="description" content="Demo: wie eine KI-Scribe-Notiz als FHIR R4 Ressourcen in einem Praxisverwaltungssystem landet." />
+  <title>Note to Record — from consultation note to FHIR</title>
+  <meta name="description" content="Demo: how an AI scribe note becomes FHIR R4 resources in a medical record system." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="container">
     <header class="hero">
-      <span class="tag">Demo · nur Testdaten</span>
+      <div class="hero-top">
+        <span class="tag" data-i18n="tag">Demo · sample data only</span>
+        <div class="lang-toggle" role="group" aria-label="Language">
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
+          <button type="button" class="lang-btn" data-lang="de">DE</button>
+        </div>
+      </div>
       <h1>Note to Record</h1>
-      <p>
-        So wird aus einer Konsultationsnotiz ein strukturierter FHIR-R4-Datensatz im
-        Praxisverwaltungssystem: eine KI-Scribe schreibt die Notiz, die Felder werden auf
-        Patient, Encounter und DocumentReference abgebildet, und die Notiz wird unverändert
-        aus dem Server zurückgelesen, um den Roundtrip zu beweisen.
+      <p data-i18n="intro">
+        This is how a consultation note becomes a structured FHIR R4 record in a medical
+        record system: an AI scribe writes the note, the fields are mapped onto Patient,
+        Encounter, Condition, and DocumentReference, and the note is read back unchanged
+        from the server to prove the round trip.
       </p>
     </header>
 
     <section class="card" id="note">
-      <h2>1. Konsultationsnotiz</h2>
-      <p class="section-sub">Hausarztbesuch wegen Rückenschmerzen · frei erfundene Patientin</p>
+      <h2 data-i18n="noteHeading">1. Consultation note</h2>
+      <p class="section-sub" data-i18n="noteSub">GP visit for back pain · fictional patient</p>
       <pre id="note-text"></pre>
     </section>
 
     <section class="card" id="mapping">
-      <h2>2. Zuordnung zu FHIR</h2>
-      <p class="section-sub">Welcher Teil der Notiz landet in welchem FHIR-Feld</p>
+      <h2 data-i18n="mappingHeading">2. Mapping to FHIR</h2>
+      <p class="section-sub" data-i18n="mappingSub">Which part of the note becomes which FHIR field</p>
       <div class="table-scroll">
       <table class="mapping">
         <thead>
           <tr>
-            <th>Teil der Notiz</th>
-            <th>FHIR-Feld</th>
+            <th data-i18n="thNote">Part of the note</th>
+            <th data-i18n="thField">FHIR field</th>
           </tr>
         </thead>
         <tbody>
@@ -55,15 +61,19 @@
             <td class="field">Encounter.period.start</td>
           </tr>
           <tr>
-            <td>Art des Dokuments (Konsultationsnotiz)</td>
+            <td>Beurteilung: Akute unspezifische lumbale Rückenschmerzen (ICD-10-GM M54.50)</td>
+            <td class="field">Condition.code = ICD-10-GM M54.50</td>
+          </tr>
+          <tr>
+            <td data-i18n="rowDocType">Type of document (consult note)</td>
             <td class="field">DocumentReference.type = LOINC 11488-4</td>
           </tr>
           <tr>
-            <td>Bezug zu Patientin &amp; Termin</td>
+            <td data-i18n="rowLink">Link to patient &amp; visit</td>
             <td class="field">DocumentReference.subject / .context.encounter</td>
           </tr>
           <tr>
-            <td>Gesamter Notiztext</td>
+            <td data-i18n="rowFullText">Full note text</td>
             <td class="field">DocumentReference.content.attachment.data (Base64)</td>
           </tr>
         </tbody>
@@ -72,29 +82,29 @@
     </section>
 
     <section class="card" id="actions">
-      <h2>3. An das Record-System senden</h2>
-      <p class="section-sub">
-        Legt Patient, Encounter und DocumentReference auf dem öffentlichen HAPI-FHIR-Testserver an
-        und liest die Notiz zurück.
+      <h2 data-i18n="actionsHeading">3. Send to record system</h2>
+      <p class="section-sub" data-i18n="actionsSub">
+        Creates Patient, Encounter, Condition, and DocumentReference on the public HAPI FHIR
+        test server, and reads the note back.
       </p>
       <div class="actions-row">
-        <button id="send-btn">Send to record</button>
-        <button id="break-btn">Break it</button>
+        <button id="send-btn" data-i18n="sendBtn">Send to record</button>
+        <button id="break-btn" data-i18n="breakBtn">Break it</button>
       </div>
       <p class="status-line" id="status-line"></p>
       <p class="explain-box hidden" id="explain-box"></p>
     </section>
 
     <section class="card hidden" id="roundtrip">
-      <h2>4. Roundtrip-Vergleich</h2>
-      <p class="section-sub">Original-Notiz vs. aus dem Server dekodierte Notiz</p>
+      <h2 data-i18n="roundtripHeading">4. Round trip comparison</h2>
+      <p class="section-sub" data-i18n="roundtripSub">Original note vs. the note decoded from the server</p>
       <div class="roundtrip-grid">
         <div>
-          <h3>Original</h3>
+          <h3 data-i18n="roundtripOriginalLabel">Original</h3>
           <pre id="roundtrip-original"></pre>
         </div>
         <div>
-          <h3>Vom Server zurückgelesen</h3>
+          <h3 data-i18n="roundtripDecodedLabel">Read back from server</h3>
           <pre id="roundtrip-decoded"></pre>
         </div>
       </div>
@@ -102,16 +112,20 @@
 
     <section class="card" id="log-section">
       <div class="log-header-row">
-        <h2 style="margin:0;">5. API-Log</h2>
-        <button id="clear-log-btn">Clear</button>
+        <h2 style="margin:0;" data-i18n="logHeading">5. API log</h2>
+        <button id="clear-log-btn" data-i18n="clearBtn">Clear</button>
       </div>
       <div id="log-entries"></div>
     </section>
 
     <footer>
-      Testdaten, öffentlicher Server
-      (<a href="https://hapi.fhir.org/baseR4" target="_blank" rel="noopener">hapi.fhir.org/baseR4</a>),
-      für jeden sichtbar — keine echten Patientendaten.
+      <p>
+        <span data-i18n="footer1">Test data, public server (</span><a href="https://hapi.fhir.org/baseR4" target="_blank" rel="noopener">hapi.fhir.org/baseR4</a><span data-i18n="footer2">), visible to everyone — no real patient data.</span>
+      </p>
+      <p class="credit">
+        Built by Edgardo Bermudez as a prototype with Claude Code ·
+        <a href="https://www.linkedin.com/in/edgardobermudez/" target="_blank" rel="noopener">LinkedIn</a>
+      </p>
     </footer>
   </div>
 
